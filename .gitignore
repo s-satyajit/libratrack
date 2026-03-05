@@ -2,7 +2,7 @@
 Documentation/
 libratrack-private/
 scripts/
-.github/ISSUE_TEMPLATE/
+.github/ISSUE_TEMPLATE/bug_report.md
 .github/PULL_REQUEST_TEMPLATE.md
 
 # ── CMake build artifacts ──────────────────────────────────────────────────────
