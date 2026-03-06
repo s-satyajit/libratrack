@@ -15,20 +15,44 @@ Write-Host "|       LibraTrack - Setup             |" -ForegroundColor Cyan
 Write-Host "+======================================+" -ForegroundColor Cyan
 Write-Host ""
 
+# -- Refresh PATH from registry (picks up newly installed tools) --------------------
+function Update-SessionPath {
+    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" +
+                [System.Environment]::GetEnvironmentVariable("PATH", "User")
+}
+
 # -- Helper: install a package via winget -------------------------------------------
 function Install-WingetPackage {
-    param([string]$Name, [string]$WingetId)
+    param([string]$Name, [string]$WingetId, [string]$Command = "")
+    if (!$Command) { $Command = $Name }
+
     Write-Host "  Installing $Name via winget..." -ForegroundColor Yellow
-    winget install --id $WingetId --silent --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  [X] Failed to install $Name automatically." -ForegroundColor Red
+    # winget returns non-zero for "already installed / no upgrade" - that is fine
+    winget install --id $WingetId --silent --accept-package-agreements --accept-source-agreements 2>&1 | Out-Null
+
+    # Refresh PATH so newly installed tools are visible
+    Update-SessionPath
+
+    # Also probe common install locations for tools that don't update PATH immediately
+    $extraPaths = @(
+        "$env:ProgramFiles\CMake\bin",
+        "$env:ProgramFiles\Git\cmd",
+        "$env:ProgramFiles\Git\bin",
+        "$env:ProgramFiles\LLVM\bin",
+        "$env:ProgramFiles(x86)\CMake\bin"
+    )
+    foreach ($p in $extraPaths) {
+        if ((Test-Path $p) -and ($env:PATH -notlike "*$p*")) {
+            $env:PATH = "$p;$env:PATH"
+        }
+    }
+
+    if (!(Get-Command $Command -ErrorAction SilentlyContinue)) {
+        Write-Host "  [X] $Name was not found after install attempt." -ForegroundColor Red
         Write-Host "      Please install it manually and re-run setup.ps1" -ForegroundColor Red
         exit 1
     }
-    # Refresh PATH in the current session
-    $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" +
-                [System.Environment]::GetEnvironmentVariable("PATH", "User")
-    Write-Host "  [OK] $Name installed." -ForegroundColor Green
+    Write-Host "  [OK] $Name ready." -ForegroundColor Green
 }
 
 # -- Dependency checks (auto-install if missing) ------------------------------------
@@ -40,13 +64,16 @@ if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+# Refresh PATH first in case tools are installed but not yet in current session PATH
+Update-SessionPath
+
 foreach ($entry in @(
-    @{ Tool = "cmake"; WingetId = "Kitware.CMake"    },
-    @{ Tool = "git";   WingetId = "Git.Git"          }
+    @{ Tool = "cmake"; WingetId = "Kitware.CMake" },
+    @{ Tool = "git";   WingetId = "Git.Git"       }
 )) {
     if (!(Get-Command $entry.Tool -ErrorAction SilentlyContinue)) {
-        Write-Host "  [X] Missing: $($entry.Tool)" -ForegroundColor Red
-        Install-WingetPackage -Name $entry.Tool -WingetId $entry.WingetId
+        Write-Host "  [!] Not found in PATH: $($entry.Tool)" -ForegroundColor Yellow
+        Install-WingetPackage -Name $entry.Tool -WingetId $entry.WingetId -Command $entry.Tool
     } else {
         $path = (Get-Command $entry.Tool).Source
         Write-Host "  [OK] Found: $($entry.Tool)  ($path)" -ForegroundColor Green
@@ -78,8 +105,8 @@ if (!(Test-CppCompiler)) {
     } else {
         Write-Host "  [!] No C++17 compiler found - installing LLVM/Clang + Ninja..." -ForegroundColor Yellow
     }
-    Install-WingetPackage -Name "LLVM (clang++)" -WingetId "LLVM.LLVM"
-    Install-WingetPackage -Name "Ninja"           -WingetId "Ninja-build.Ninja"
+    Install-WingetPackage -Name "LLVM (clang++)" -WingetId "LLVM.LLVM"         -Command "clang++"
+    Install-WingetPackage -Name "Ninja"           -WingetId "Ninja-build.Ninja" -Command "ninja"
     Write-Host "  [OK] C++17 compiler ready." -ForegroundColor Green
 }
 Write-Host ""
