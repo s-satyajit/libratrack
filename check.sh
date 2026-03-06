@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check.sh — Build and run the public test for a specific issue
+# check.sh - Build and run the public test for a specific issue
 # Usage: ./check.sh <issue-number>
 # Example: ./check.sh 5   or   ./check.sh 42
 
@@ -35,9 +35,9 @@ fi
 NN=$(printf "%02d" "$NUM")
 TEST_FILTER="Issue${NN}_Public"
 
-echo -e "${CYAN}${BOLD}╔══════════════════════════════════════╗${RESET}"
-echo -e "${CYAN}${BOLD}║   LibraTrack — Issue #${NN} checker     ║${RESET}"
-echo -e "${CYAN}${BOLD}╚══════════════════════════════════════╝${RESET}"
+echo -e "${CYAN}${BOLD}+======================================+${RESET}"
+echo -e "${CYAN}${BOLD}|   LibraTrack - Issue #${NN} checker     |${RESET}"
+echo -e "${CYAN}${BOLD}+======================================+${RESET}"
 echo ""
 
 # ── Check build dir exists ────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ BUILD_EXIT=$?
 
 if [[ $BUILD_EXIT -ne 0 ]]; then
     echo ""
-    echo -e "${RED}${BOLD}✗ Build failed — fix the compile errors below:${RESET}"
+    echo -e "${RED}${BOLD}  [X] Build failed - fix the compile errors below:${RESET}"
     echo ""
     echo "$BUILD_OUTPUT" | grep -E "error:|warning:|note:" | head -30
     echo ""
@@ -62,7 +62,7 @@ if [[ $BUILD_EXIT -ne 0 ]]; then
     exit 1
 fi
 
-echo -e "${GREEN}✓ Build succeeded${RESET}"
+echo -e "${GREEN}  [OK] Build succeeded${RESET}"
 echo ""
 
 # ── Run the test ──────────────────────────────────────────────────────────────
@@ -79,18 +79,18 @@ set -e
 echo "$TEST_OUTPUT" | grep -v "^Internal ctest" | sed 's/^/  /'
 
 echo ""
-echo -e "──────────────────────────────────────────"
+echo -e "------------------------------------------"
 
 if [[ $TEST_EXIT -eq 0 ]]; then
-    echo -e "${GREEN}${BOLD}  ✓  All tests for Issue #${NN} PASSED!${RESET}"
-    echo -e "${GREEN}     Your fix is working correctly.${RESET}"
+    echo -e "${GREEN}${BOLD}  [OK] All tests for Issue #${NN} PASSED!${RESET}"
+    echo -e "${GREEN}       Your fix is working correctly.${RESET}"
 else
-    echo -e "${RED}${BOLD}  ✗  Tests for Issue #${NN} FAILED.${RESET}"
-    echo -e "${YELLOW}     Review the output above — the 'Actual' vs 'Expected'${RESET}"
-    echo -e "${YELLOW}     lines show exactly what your code returned.${RESET}"
+    echo -e "${RED}${BOLD}  [X]  Tests for Issue #${NN} FAILED.${RESET}"
+    echo -e "${YELLOW}       Review the output above - the 'Actual' vs 'Expected'${RESET}"
+    echo -e "${YELLOW}       lines show exactly what your code returned.${RESET}"
 fi
 
-echo -e "──────────────────────────────────────────"
+echo -e "------------------------------------------"
 echo ""
 
 exit $TEST_EXIT
