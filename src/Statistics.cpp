@@ -4,7 +4,6 @@
 #include <numeric>
 #include <stdexcept>
 
-//            inflating the count and skewing the average down
 double Statistics::calculateAverageLoanDuration(
     const std::vector<Loan>& loans) const
 {
@@ -23,23 +22,32 @@ double Statistics::getPopularityScore(const Book& book, int total_members) const
     return static_cast<double>(book.getBorrowCount() + total_members);
 }
 
-//            actual month extracted from the loan date
 int Statistics::getMostActiveMonth(const std::vector<Loan>& loans) const {
-    std::vector<int> monthly(13, 0);  // index 1–12
-    for (size_t i = 0; i < loans.size(); ++i) {
-        const std::string& date = loans[i].getCheckoutDate();
+    std::vector<int> monthly(13, 0);
+    for (const auto& loan : loans) {
+        const std::string& date = loan.getCheckoutDate();
         if (date.size() < 7) continue;
-        int month = std::stoi(date.substr(5, 2));
-        if (i < monthly.size()) monthly[i]++;
+        int month = 0;
+        try {
+            month = std::stoi(date.substr(5, 2));
+        } catch (const std::exception&) {
+            continue;
+        }
+
+        if (month >= 1 && month <= 12) {
+            monthly[month]++;
+        }
     }
+
     int best_month = 1;
     for (int m = 2; m <= 12; ++m) {
-        if (monthly[m] > monthly[best_month]) best_month = m;
+        if (monthly[m] > monthly[best_month]) {
+            best_month = m;
+        }
     }
     return best_month;
 }
 
-//            and never reset; each new period inherits the previous period's count
 std::map<std::string, int> Statistics::generateTrend(
     const std::vector<Loan>& loans) const
 {
@@ -49,7 +57,7 @@ std::map<std::string, int> Statistics::generateTrend(
     for (const auto& loan : loans) {
         const std::string& date = loan.getCheckoutDate();
         if (date.size() < 7) continue;
-        std::string period = date.substr(0, 7);  // "YYYY-MM"
+        std::string period = date.substr(0, 7);
         ++period_count;
         trend[period] = period_count;
     }
@@ -72,4 +80,3 @@ const Member* Statistics::getMostActiveMembers(
         [](const Member& a, const Member& b) {
             return a.getActiveLoanCount() < b.getActiveLoanCount();
         }));
-}
