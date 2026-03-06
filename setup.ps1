@@ -1,4 +1,4 @@
-# setup.ps1 — One-step build setup for LibraTrack (Windows / PowerShell)
+# setup.ps1 - One-step build setup for LibraTrack (Windows / PowerShell)
 # Usage:  .\setup.ps1
 #
 # Prerequisites (install once):
@@ -10,20 +10,20 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host ""
-Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║       LibraTrack — Setup             ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host "+======================================+" -ForegroundColor Cyan
+Write-Host "|       LibraTrack - Setup             |" -ForegroundColor Cyan
+Write-Host "+======================================+" -ForegroundColor Cyan
 Write-Host ""
 
-# ── Dependency checks ─────────────────────────────────────────────────────────
+# -- Dependency checks ---------------------------------------------------------------
 $missing = $false
 foreach ($tool in @("cmake", "git")) {
     if (!(Get-Command $tool -ErrorAction SilentlyContinue)) {
-        Write-Host "  ✗ Missing: $tool" -ForegroundColor Red
+        Write-Host "  [X] Missing: $tool" -ForegroundColor Red
         $missing = $true
     } else {
         $path = (Get-Command $tool).Source
-        Write-Host "  ✓ Found: $tool  ($path)" -ForegroundColor Green
+        Write-Host "  [OK] Found: $tool  ($path)" -ForegroundColor Green
     }
 }
 
@@ -36,7 +36,7 @@ if ($missing) {
 }
 Write-Host ""
 
-# ── CMake configure ───────────────────────────────────────────────────────────
+# -- CMake configure -----------------------------------------------------------------
 Write-Host "[1/2] Configuring build..." -ForegroundColor White
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 if ($LASTEXITCODE -ne 0) {
@@ -45,7 +45,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host ""
 
-# ── Build ─────────────────────────────────────────────────────────────────────
+# -- Build ---------------------------------------------------------------------------
 Write-Host "[2/2] Building..." -ForegroundColor White
 cmake --build build --config Debug
 if ($LASTEXITCODE -ne 0) {
@@ -54,11 +54,11 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "  ✓ Setup complete!" -ForegroundColor Green
+Write-Host "  [OK] Setup complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Run the test for a specific issue:" -ForegroundColor White
 Write-Host "    .\check.ps1 [issue-number]" -ForegroundColor Cyan
 Write-Host "  Examples:" -ForegroundColor White
-Write-Host "    .\check.ps1 1    — tests your fix for Issue #01" -ForegroundColor Cyan
-Write-Host "    .\check.ps1 42   — tests your fix for Issue #42" -ForegroundColor Cyan
+Write-Host "    .\check.ps1 1    - tests your fix for Issue #01" -ForegroundColor Cyan
+Write-Host "    .\check.ps1 42   - tests your fix for Issue #42" -ForegroundColor Cyan
 Write-Host ""
